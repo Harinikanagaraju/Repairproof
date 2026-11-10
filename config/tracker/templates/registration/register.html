@@ -1,0 +1,44 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register | RepairProof</title>
+    <link rel="stylesheet" href="{% static 'tracker/style.css' %}">
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+
+    <h1>Repair<span>Proof</span></h1>
+    <p class="subtitle">Create your personal account.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+
+                {% if field.errors %}
+                    <small class="auth-error">{{ field.errors }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="primary-btn auth-submit">
+            Create Account →
+        </button>
+
+    </form>
+
+    <p class="auth-footer">
+        Already registered?
+        <a href="{% url 'login' %}">Login</a>
+    </p>
+
+</div>
+
+</body>
+</html>

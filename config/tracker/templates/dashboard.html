@@ -1,0 +1,129 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | RepairProof{% endblock %}
+
+{% block content %}
+
+<header class="topbar">
+    <div>
+        <p class="eyebrow">OVERVIEW</p>
+        <h1>Good to see you, {{ request.user.username }} 👋</h1>
+        <p class="subtitle">Manage your appliances and warranties in one place.</p>
+    </div>
+
+    <a href="{% url 'add_appliance' %}" class="primary-btn">
+        + Add Appliance
+    </a>
+</header>
+
+<section class="stats-grid">
+
+    <div class="stat-card">
+        <span class="stat-icon purple">▣</span>
+        <p>Total Appliances</p>
+        <h2>{{ total }}</h2>
+        <small>Your registered assets</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon green">✓</span>
+        <p>Active Warranty</p>
+        <h2>{{ active }}</h2>
+        <small>Currently protected</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon orange">◷</span>
+        <p>Expiring Soon</p>
+        <h2>{{ expiring }}</h2>
+        <small>Within 30 days</small>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-icon red">!</span>
+        <p>Expired Warranty</p>
+        <h2>{{ expired }}</h2>
+        <small>Needs attention</small>
+    </div>
+
+</section>
+
+<section class="section-heading">
+    <div>
+        <p class="eyebrow">YOUR COLLECTION</p>
+        <h2>My Appliances</h2>
+    </div>
+    <span class="count-pill">{{ total }} Items</span>
+</section>
+
+<section class="appliance-grid">
+
+    {% for appliance in appliances %}
+
+    <article class="appliance-card">
+
+        <div class="card-top">
+            <span class="category-tag">{{ appliance.category }}</span>
+
+            {% if appliance.warranty_status == 'Active' %}
+                <span class="status active">● Active</span>
+            {% elif appliance.warranty_status == 'Expiring Soon' %}
+                <span class="status warning">● Expiring Soon</span>
+            {% else %}
+                <span class="status expired">● Expired</span>
+            {% endif %}
+        </div>
+
+        <div class="appliance-symbol">▣</div>
+
+        <h3>{{ appliance.name }}</h3>
+        <p class="muted">{{ appliance.brand }} · {{ appliance.model_number }}</p>
+
+        <div class="card-divider"></div>
+
+        <div class="detail-row">
+            <span>Purchase date</span>
+            <strong>{{ appliance.purchase_date|date:"d M Y" }}</strong>
+        </div>
+
+        <div class="detail-row">
+            <span>Warranty ends</span>
+            <strong>{{ appliance.warranty_end|date:"d M Y" }}</strong>
+        </div>
+
+        <div class="card-footer">
+
+            {% if appliance.bill %}
+                <a href="{{ appliance.bill.url }}" target="_blank" class="text-link">
+                    View bill ↗
+                </a>
+            {% else %}
+                <span class="muted">No bill uploaded</span>
+            {% endif %}
+
+            <form method="post" action="{% url 'delete_appliance' appliance.pk %}" onsubmit="return confirm('Delete this appliance?')">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">Delete</button>
+            </form>
+
+        </div>
+
+    </article>
+
+    {% empty %}
+
+    <div class="empty-state">
+        <div class="empty-icon">▣</div>
+        <h3>No appliances yet</h3>
+        <p>Start by adding your first home appliance.</p>
+        <a href="{% url 'add_appliance' %}" class="primary-btn">
+            + Add your first appliance
+        </a>
+    </div>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

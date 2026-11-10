@@ -1,0 +1,63 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Add Appliance | RepairProof{% endblock %}
+
+{% block content %}
+
+<header class="topbar">
+    <div>
+        <p class="eyebrow">NEW ASSET</p>
+        <h1>Add an Appliance</h1>
+        <p class="subtitle">Keep your purchase and warranty details safe.</p>
+    </div>
+    <a href="{% url 'dashboard' %}" class="secondary-btn">← Back</a>
+</header>
+
+<div class="form-card">
+
+    <form method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="form-errors">
+                Please correct the errors below.
+                {{ form.errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+
+            {% for field in form %}
+
+            <div class="form-group {% if field.name == 'notes' or field.name == 'bill' %}full-width{% endif %}">
+
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <small>{{ field.help_text }}</small>
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'dashboard' %}" class="secondary-btn">Cancel</a>
+            <button type="submit" class="primary-btn">
+                Save Appliance →
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

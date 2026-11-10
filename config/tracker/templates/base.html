@@ -1,0 +1,74 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}RepairProof{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'tracker/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="app-layout">
+
+    <aside class="sidebar">
+
+        <a href="{% url 'dashboard' %}" class="brand">
+            <span class="brand-icon">R</span>
+            <span>Repair<span class="brand-accent">Proof</span></span>
+        </a>
+
+        <p class="menu-label">WORKSPACE</p>
+
+        <a href="{% url 'dashboard' %}" class="nav-link active">
+            <span>▦</span> Dashboard
+        </a>
+
+        <a href="{% url 'add_appliance' %}" class="nav-link">
+            <span>＋</span> Add Appliance
+        </a>
+
+        <div class="sidebar-bottom">
+            <p class="menu-label">ACCOUNT</p>
+            <div class="user-card">
+                <div class="avatar">{{ request.user.username|first|upper }}</div>
+                <div>
+                    <strong>{{ request.user.username }}</strong>
+                    <small>Personal Account</small>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="logout-btn" type="submit">
+                    ↪ Logout
+                </button>
+            </form>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+</div>
+
+<script src="{% static 'tracker/script.js' %}"></script>
+
+</body>
+</html>
