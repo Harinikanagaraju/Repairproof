@@ -1,129 +1,328 @@
-
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard | RepairProof{% endblock %}
 
 {% block content %}
 
-<header class="topbar">
-    <div>
-        <p class="eyebrow">OVERVIEW</p>
-        <h1>Good to see you, {{ request.user.username }} 👋</h1>
-        <p class="subtitle">Manage your appliances and warranties in one place.</p>
-    </div>
+<div class="rp-dashboard">
 
-    <a href="{% url 'add_appliance' %}" class="primary-btn">
-        + Add Appliance
-    </a>
-</header>
-
-<section class="stats-grid">
-
-    <div class="stat-card">
-        <span class="stat-icon purple">▣</span>
-        <p>Total Appliances</p>
-        <h2>{{ total }}</h2>
-        <small>Your registered assets</small>
-    </div>
-
-    <div class="stat-card">
-        <span class="stat-icon green">✓</span>
-        <p>Active Warranty</p>
-        <h2>{{ active }}</h2>
-        <small>Currently protected</small>
-    </div>
-
-    <div class="stat-card">
-        <span class="stat-icon orange">◷</span>
-        <p>Expiring Soon</p>
-        <h2>{{ expiring }}</h2>
-        <small>Within 30 days</small>
-    </div>
-
-    <div class="stat-card">
-        <span class="stat-icon red">!</span>
-        <p>Expired Warranty</p>
-        <h2>{{ expired }}</h2>
-        <small>Needs attention</small>
-    </div>
-
-</section>
-
-<section class="section-heading">
-    <div>
-        <p class="eyebrow">YOUR COLLECTION</p>
-        <h2>My Appliances</h2>
-    </div>
-    <span class="count-pill">{{ total }} Items</span>
-</section>
-
-<section class="appliance-grid">
-
-    {% for appliance in appliances %}
-
-    <article class="appliance-card">
-
-        <div class="card-top">
-            <span class="category-tag">{{ appliance.category }}</span>
-
-            {% if appliance.warranty_status == 'Active' %}
-                <span class="status active">● Active</span>
-            {% elif appliance.warranty_status == 'Expiring Soon' %}
-                <span class="status warning">● Expiring Soon</span>
-            {% else %}
-                <span class="status expired">● Expired</span>
-            {% endif %}
+    <!-- Welcome Header -->
+    <header class="rp-header">
+        <div>
+            <span class="rp-eyebrow">YOUR PERSONAL ASSET MANAGER</span>
+            <h1>Welcome back, {{ request.user.username }} 👋</h1>
+            <p>Here's an overview of your appliances and warranties.</p>
         </div>
 
-        <div class="appliance-symbol">▣</div>
-
-        <h3>{{ appliance.name }}</h3>
-        <p class="muted">{{ appliance.brand }} · {{ appliance.model_number }}</p>
-
-        <div class="card-divider"></div>
-
-        <div class="detail-row">
-            <span>Purchase date</span>
-            <strong>{{ appliance.purchase_date|date:"d M Y" }}</strong>
-        </div>
-
-        <div class="detail-row">
-            <span>Warranty ends</span>
-            <strong>{{ appliance.warranty_end|date:"d M Y" }}</strong>
-        </div>
-
-        <div class="card-footer">
-
-            {% if appliance.bill %}
-                <a href="{{ appliance.bill.url }}" target="_blank" class="text-link">
-                    View bill ↗
-                </a>
-            {% else %}
-                <span class="muted">No bill uploaded</span>
-            {% endif %}
-
-            <form method="post" action="{% url 'delete_appliance' appliance.pk %}" onsubmit="return confirm('Delete this appliance?')">
-                {% csrf_token %}
-                <button type="submit" class="delete-btn">Delete</button>
-            </form>
-
-        </div>
-
-    </article>
-
-    {% empty %}
-
-    <div class="empty-state">
-        <div class="empty-icon">▣</div>
-        <h3>No appliances yet</h3>
-        <p>Start by adding your first home appliance.</p>
-        <a href="{% url 'add_appliance' %}" class="primary-btn">
-            + Add your first appliance
+        <a href="{% url 'add_appliance' %}" class="rp-primary-btn">
+            <span>＋</span> Add Appliance
         </a>
-    </div>
+    </header>
 
-    {% endfor %}
+    <!-- Statistics -->
+    <section class="rp-stats">
 
-</section>
+        <div class="rp-stat-card">
+            <div class="rp-stat-top">
+                <span>Total Appliances</span>
+                <span class="rp-stat-icon purple">▣</span>
+            </div>
+            <h2>{{ total }}</h2>
+            <small>Registered appliances</small>
+        </div>
+
+        <div class="rp-stat-card">
+            <div class="rp-stat-top">
+                <span>Active Warranty</span>
+                <span class="rp-stat-icon green">✓</span>
+            </div>
+            <h2>{{ active }}</h2>
+            <small>Currently protected</small>
+        </div>
+
+        <div class="rp-stat-card">
+            <div class="rp-stat-top">
+                <span>Expiring Soon</span>
+                <span class="rp-stat-icon orange">◷</span>
+            </div>
+            <h2>{{ expiring }}</h2>
+            <small>Within 30 days</small>
+        </div>
+
+        <div class="rp-stat-card">
+            <div class="rp-stat-top">
+                <span>Expired</span>
+                <span class="rp-stat-icon red">!</span>
+            </div>
+            <h2>{{ expired }}</h2>
+            <small>Warranty ended</small>
+        </div>
+
+    </section>
+
+    <!-- Expense Overview -->
+    <section class="rp-expense-panel">
+
+        <div class="rp-expense-info">
+            <span class="rp-eyebrow">FINANCIAL OVERVIEW</span>
+            <h2>₹{{ total_spend|floatformat:2 }}</h2>
+            <p>Total purchase value of your registered appliances.</p>
+        </div>
+
+        <div class="rp-chart-area">
+            <h3>Category-wise Expenses</h3>
+            <canvas id="expenseChart"></canvas>
+            <p id="chartEmpty" class="rp-chart-empty" hidden>
+                Add appliances to view expense analytics.
+            </p>
+        </div>
+
+    </section>
+
+    <!-- Appliance Section -->
+    <section class="rp-appliance-section">
+
+        <div class="rp-section-heading">
+            <div>
+                <span class="rp-eyebrow">YOUR COLLECTION</span>
+                <h2>My Appliances</h2>
+                <p>Manage and monitor your registered devices.</p>
+            </div>
+
+            <span class="rp-count">{{ appliances|length }} results</span>
+        </div>
+
+        <!-- Search and Filters -->
+        <form method="get" class="rp-filter-bar">
+
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Search appliance, brand or model..."
+                aria-label="Search appliances"
+            >
+
+            <select name="category">
+                <option value="">All Categories</option>
+
+                {% for value, label in categories %}
+                    <option
+                        value="{{ value }}"
+                        {% if selected_category == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="status">
+                <option value="">All Warranty Status</option>
+
+                <option value="Active"
+                    {% if selected_status == "Active" %}selected{% endif %}>
+                    Active
+                </option>
+
+                <option value="Expiring Soon"
+                    {% if selected_status == "Expiring Soon" %}selected{% endif %}>
+                    Expiring Soon
+                </option>
+
+                <option value="Expired"
+                    {% if selected_status == "Expired" %}selected{% endif %}>
+                    Expired
+                </option>
+            </select>
+
+            <button type="submit" class="rp-filter-btn">Apply</button>
+
+            <a href="{% url 'dashboard' %}" class="rp-reset-btn">
+                Reset
+            </a>
+
+        </form>
+
+        <!-- Appliance Cards -->
+        <div class="rp-appliance-grid">
+
+            {% for appliance in appliances %}
+
+            <article class="rp-appliance-card">
+
+                <div class="rp-card-top">
+
+                    <span class="rp-category">
+                        {{ appliance.category }}
+                    </span>
+
+                    {% if appliance.warranty_status == "Active" %}
+                        <span class="rp-status active">● Active</span>
+                    {% elif appliance.warranty_status == "Expiring Soon" %}
+                        <span class="rp-status warning">● Expiring Soon</span>
+                    {% else %}
+                        <span class="rp-status expired">● Expired</span>
+                    {% endif %}
+
+                </div>
+
+                <div class="rp-appliance-icon">▣</div>
+
+                <h3>{{ appliance.name }}</h3>
+
+                <p class="rp-brand">
+                    {{ appliance.brand }} · {{ appliance.model_number }}
+                </p>
+
+                <div class="rp-card-divider"></div>
+
+                <div class="rp-detail">
+                    <span>Purchase Date</span>
+                    <strong>{{ appliance.purchase_date|date:"d M Y" }}</strong>
+                </div>
+
+                <div class="rp-detail">
+                    <span>Warranty Ends</span>
+                    <strong>{{ appliance.warranty_end|date:"d M Y" }}</strong>
+                </div>
+
+                <div class="rp-detail">
+                    <span>Purchase Price</span>
+                    <strong>₹{{ appliance.price|floatformat:2 }}</strong>
+                </div>
+
+                <div class="rp-card-footer">
+
+                    {% if appliance.bill %}
+                        <a
+                            href="{{ appliance.bill.url }}"
+                            target="_blank"
+                            rel="noopener"
+                            class="rp-bill-link"
+                        >
+                            View Bill ↗
+                        </a>
+                    {% else %}
+                        <span class="rp-no-bill">No bill uploaded</span>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{% url 'delete_appliance' appliance.pk %}"
+                        onsubmit="return confirm('Are you sure you want to delete this appliance?')"
+                    >
+                        {% csrf_token %}
+                        <button type="submit" class="rp-delete-btn">
+                            Delete
+                        </button>
+                    </form>
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="rp-empty-state">
+                <div class="rp-empty-icon">▣</div>
+
+                {% if search_query or selected_category or selected_status %}
+                    <h3>No matching appliances</h3>
+                    <p>Try changing your search or filters.</p>
+                    <a href="{% url 'dashboard' %}" class="rp-primary-btn">
+                        Clear Filters
+                    </a>
+                {% else %}
+                    <h3>Your collection is empty</h3>
+                    <p>Start tracking your appliances and warranties.</p>
+                    <a href="{% url 'add_appliance' %}" class="rp-primary-btn">
+                        + Add Your First Appliance
+                    </a>
+                {% endif %}
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+</div>
+
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_values|json_script:"chart-values" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const labels = JSON.parse(
+        document.getElementById("chart-labels").textContent
+    );
+
+    const values = JSON.parse(
+        document.getElementById("chart-values").textContent
+    );
+
+    const chartCanvas = document.getElementById("expenseChart");
+    const emptyMessage = document.getElementById("chartEmpty");
+
+    if (!labels.length) {
+        chartCanvas.hidden = true;
+        emptyMessage.hidden = false;
+        return;
+    }
+
+    new Chart(chartCanvas, {
+        type: "doughnut",
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                data: values,
+                backgroundColor: [
+                    "#8b5cf6",
+                    "#22d3ee",
+                    "#34d399",
+                    "#fbbf24",
+                    "#fb7185"
+                ],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        color: "#cbd5e1",
+                        padding: 18
+                    }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ": ₹" +
+                                Number(context.raw).toLocaleString("en-IN");
+                        }
+                    }
+                }
+            },
+
+            cutout: "68%"
+        }
+    });
+
+});
+</script>
 
 {% endblock %}
